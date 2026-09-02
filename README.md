@@ -7,23 +7,43 @@
 
 ---
 
-## 🚀 Quick Start (Docker / Portainer)
+## 🚢 Deploy with Portainer
 
-### Docker Compose
-Create a `docker-compose.yml`:
+1. In Portainer, go to **Stacks** ➔ click **+ Add stack**.
+2. Name the stack: `divitask`
+3. Under **Build method**, select **Repository**:
+   - **Repository URL**: `https://github.com/rszabla/divitask.git`
+   - **Repository reference**: `refs/heads/main`
+   - **Compose path**: `docker-compose.yml`
+4. *(Optional)* Under **Environment variables**, you can customize settings:
+   - `HOST_PORT`: Server port (default: `3000`)
+   - `DATA_PATH`: Host folder for tasks (default: `/docker/divitask/data`)
+5. *(Optional)* Turn on **Automatic updates** (polling or webhook).
+6. Click **Deploy the stack**.
+
+---
+
+## 🐳 Docker Compose (CLI)
 
 ```yaml
 version: '3.8'
 
 services:
   divitask:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: divitask:latest
     container_name: divitask
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "${HOST_PORT:-3000}:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - DATA_DIR=/app/data
     volumes:
-      - /docker/divitask/data:/app/data
+      - ${DATA_PATH:-/docker/divitask/data}:/app/data
 ```
 
 Start the container:
