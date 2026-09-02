@@ -1,0 +1,755 @@
+{
+  "id": "doc-welcome",
+  "title": "Getting Started",
+  "rootItemIds": [
+    "item-1",
+    "item-1-2",
+    "item-2"
+  ],
+  "items": {
+    "item-1": {
+      "id": "item-1",
+      "content": "hello",
+      "note": "Key company initiative for scaling our infrastructure and shipping the v2.0 features on time.",
+      "completed": false,
+      "collapsed": false,
+      "parentId": null,
+      "childIds": [
+        "item-1-1",
+        "item-1-3"
+      ],
+      "startDate": "2026-08-29",
+      "endDate": "2026-09-26",
+      "color": "#3b82f6",
+      "progress": 45,
+      "createdAt": "2026-09-01T17:36:31.798Z",
+      "updatedAt": "2026-09-02T17:43:48.947Z"
+    },
+    "item-1-1": {
+      "id": "item-1-1",
+      "content": "Engineering & Core Platform test test hello",
+      "note": "Infrastructure updates, API endpoints, and database migration.",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-1",
+      "childIds": [
+        "item-1-1-1",
+        "item-1-1-2",
+        "item-1-1-3",
+        "item-o00zsbr"
+      ],
+      "startDate": "2026-09-11",
+      "endDate": "2026-09-18",
+      "color": "#6366f1",
+      "progress": 60,
+      "createdAt": "2026-09-01T17:36:31.798Z",
+      "updatedAt": "2026-09-02T17:11:27.763Z",
+      "timeBlocks": [
+        {
+          "id": "item-1-1-legacy",
+          "startDate": "2026-09-11",
+          "endDate": "2026-09-16",
+          "startTime": "00:00",
+          "endTime": "23:59",
+          "color": "#6366f1",
+          "progress": 60
+        },
+        {
+          "id": "tb-kzt2m76",
+          "startDate": "2026-09-15",
+          "endDate": "2026-09-16",
+          "startTime": "00:00",
+          "endTime": "00:00",
+          "color": "#6366f1"
+        },
+        {
+          "id": "tb-xezbk0x",
+          "startDate": "2026-09-19",
+          "endDate": "2026-09-20",
+          "startTime": "00:00",
+          "endTime": "00:00",
+          "color": "#6366f1"
+        },
+        {
+          "id": "tb-ud2n9z4",
+          "startDate": "2026-09-22",
+          "endDate": "2026-09-24",
+          "startTime": "00:00",
+          "endTime": "00:00",
+          "color": "#6366f1"
+        },
+        {
+          "id": "tb-odkxcfi",
+          "startDate": "2026-09-17",
+          "endDate": "2026-09-18",
+          "startTime": "00:00",
+          "endTime": "00:00",
+          "color": "#6366f1"
+        },
+        {
+          "id": "tb-2h3e2dx",
+          "startDate": "2026-09-23",
+          "endDate": "2026-09-24",
+          "startTime": "00:00",
+          "endTime": "00:00",
+          "color": "#6366f1"
+        },
+        {
+          "id": "tb-62thegf",
+          "startDate": "2026-09-17",
+          "endDate": "2026-09-18",
+          "startTime": "00:00",
+          "endTime": "00:00",
+          "color": "#6366f1"
+        }
+      ],
+      "startTime": "00:00",
+      "endTime": "00:00"
+    },
+    "item-1-1-1": {
+      "id": "item-1-1-1",
+      "content": "Database schema migration to PostgreSQL 16 hello",
+      "note": "Migrate legacy tables, optimize JSONB indices, and run stress tests.asdsafsdfg",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-1-1",
+      "childIds": [],
+      "startDate": "2026-09-07",
+      "endDate": "2026-09-10",
+      "color": "#10b981",
+      "progress": 100,
+      "createdAt": "2026-09-01T17:36:31.798Z",
+      "updatedAt": "2026-09-01T21:50:31.969Z"
+    },
+    "item-1-1-2": {
+      "id": "item-1-1-2",
+      "content": "Real-time WebSocket sync engine @backend",
+      "note": "Handle live collaborative edits, optimistic UI updates, and conflict resolution.",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-1-1",
+      "childIds": [
+        "item-1-1-2-1"
+      ],
+      "startDate": "2026-09-03",
+      "endDate": "2026-09-12",
+      "color": "#8b5cf6",
+      "progress": 0,
+      "createdAt": "2026-09-01T17:36:31.798Z",
+      "updatedAt": "2026-09-02T20:16:57.982Z"
+    },
+    "item-1-1-2-1": {
+      "id": "item-1-1-2-1",
+      "content": "Implement delta compression algorithm",
+      "note": "Reduce network payload sizes for large task trees.",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-1-1-2",
+      "childIds": [
+        "item-1-1-2-2",
+        "item-q4skdyi",
+        "item-pjk9yy2"
+      ],
+      "startDate": "2026-09-03",
+      "endDate": "2026-09-15",
+      "color": "#8b5cf6",
+      "progress": 100,
+      "createdAt": "2026-09-01T17:36:31.798Z",
+      "updatedAt": "2026-09-02T18:00:40.221Z",
+      "timeBlocks": [
+        {
+          "id": "item-1-1-2-1-legacy",
+          "startDate": "2026-09-03",
+          "endDate": "2026-09-07",
+          "color": "#8b5cf6",
+          "progress": 100
+        },
+        {
+          "id": "tb-79uiqqi",
+          "startDate": "2026-09-14",
+          "endDate": "2026-09-15",
+          "startTime": "12:00",
+          "endTime": "00:00",
+          "color": "#8b5cf6"
+        }
+      ],
+      "endTime": "00:00"
+    },
+    "item-1-1-2-2": {
+      "id": "item-1-1-2-2",
+      "content": "Benchmark with 10k concurrent simulated clients",
+      "note": "Ensure p99 latency stays under 40ms.",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-1-1-2-1",
+      "childIds": [],
+      "startDate": "2026-09-07",
+      "endDate": "2026-09-09",
+      "color": "#8b5cf6",
+      "progress": 20,
+      "createdAt": "2026-09-01T17:36:31.798Z",
+      "updatedAt": "2026-09-02T14:07:18.087Z",
+      "timeBlocks": [
+        {
+          "id": "item-1-1-2-2-legacy",
+          "startDate": "2026-09-07",
+          "endDate": "2026-09-12",
+          "startTime": "00:00",
+          "endTime": "23:59",
+          "color": "#8b5cf6",
+          "progress": 20
+        },
+        {
+          "id": "tb-u8f8p3y",
+          "startDate": "2026-09-13",
+          "endDate": "2026-09-14",
+          "startTime": "00:00",
+          "endTime": "00:00",
+          "color": "#8b5cf6"
+        },
+        {
+          "id": "tb-05r7jt9",
+          "startDate": "2026-09-14",
+          "endDate": "2026-09-14",
+          "startTime": "00:00",
+          "endTime": "12:00",
+          "color": "#8b5cf6"
+        },
+        {
+          "id": "tb-9scowcq",
+          "startDate": "2026-09-09",
+          "endDate": "2026-09-09",
+          "startTime": "00:00",
+          "endTime": "12:00",
+          "color": "#8b5cf6"
+        }
+      ],
+      "startTime": "00:00",
+      "endTime": "12:00"
+    },
+    "item-1-1-3": {
+      "id": "item-1-1-3",
+      "content": "Deploy staging cluster & end-to-end integration suite",
+      "note": "Automated CI/CD pipeline verification.",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-1-1",
+      "childIds": [],
+      "startDate": "2026-09-13",
+      "endDate": "2026-09-16",
+      "color": "#f59e0b",
+      "progress": 0,
+      "createdAt": "2026-09-01T17:36:31.798Z",
+      "updatedAt": "2026-09-02T17:52:46.970Z",
+      "timeBlocks": [
+        {
+          "id": "item-1-1-3-legacy",
+          "startDate": "2026-09-13",
+          "endDate": "2026-09-16",
+          "color": "#f59e0b",
+          "progress": 0,
+          "startTime": "00:00",
+          "endTime": "23:59"
+        }
+      ],
+      "startTime": "00:00",
+      "endTime": "23:59"
+    },
+    "item-1-2": {
+      "id": "item-1-2",
+      "content": "Design & User Experience (UX)",
+      "note": "Design system tokens, Gantt drag-and-drop interactions, accessibility audits.",
+      "completed": false,
+      "collapsed": false,
+      "parentId": null,
+      "childIds": [
+        "item-1-2-1"
+      ],
+      "startDate": "2026-08-31",
+      "endDate": "2026-09-15",
+      "color": "#ec4899",
+      "progress": 40,
+      "createdAt": "2026-09-01T17:36:31.798Z",
+      "updatedAt": "2026-09-01T21:48:09.800Z"
+    },
+    "item-1-2-1": {
+      "id": "item-1-2-1",
+      "content": "Figma interactive prototypes for Gantt timeline zoom",
+      "note": "Fine-tune hover tooltips, resize handles, and row collapse animations.",
+      "completed": true,
+      "collapsed": false,
+      "parentId": "item-1-2",
+      "childIds": [],
+      "startDate": "2026-08-31",
+      "endDate": "2026-09-06",
+      "color": "#ec4899",
+      "progress": 100,
+      "createdAt": "2026-09-01T17:36:31.798Z",
+      "updatedAt": "2026-09-01T17:36:31.798Z"
+    },
+    "item-1-3": {
+      "id": "item-1-3",
+      "content": "Go-to-Market & Launch Campaign",
+      "note": "Product Hunt launch, blog post announcements, customer webinars.",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-1",
+      "childIds": [
+        "item-1-3-1",
+        "item-1-3-2",
+        "item-pkcw2xp",
+        "item-0qair4b",
+        "item-low8t0g",
+        "item-j2o25aj",
+        "item-7h6c4xa",
+        "item-r10wcvp"
+      ],
+      "startDate": "2026-09-14",
+      "endDate": "2026-09-25",
+      "color": "#06b6d4",
+      "progress": 0,
+      "createdAt": "2026-09-01T17:36:31.798Z",
+      "updatedAt": "2026-09-02T14:20:10.978Z",
+      "timeBlocks": [
+        {
+          "id": "item-1-3-legacy",
+          "startDate": "2026-09-14",
+          "endDate": "2026-09-25",
+          "startTime": "00:00",
+          "endTime": "23:59",
+          "color": "#06b6d4",
+          "progress": 0
+        }
+      ],
+      "startTime": "00:00",
+      "endTime": "23:59"
+    },
+    "item-1-3-1": {
+      "id": "item-1-3-1",
+      "content": "Draft technical blog post and interactive demo video",
+      "note": "Record GIF walkthroughs showcasing the Outliner and Gantt zoom view.",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-1-3",
+      "childIds": [],
+      "startDate": "2026-09-04",
+      "endDate": "2026-09-08",
+      "color": "#06b6d4",
+      "progress": 0,
+      "createdAt": "2026-09-01T17:36:31.798Z",
+      "updatedAt": "2026-09-02T19:13:27.328Z",
+      "timeBlocks": [
+        {
+          "id": "item-1-3-1-legacy",
+          "startDate": "2026-09-04",
+          "endDate": "2026-09-08",
+          "startTime": "01:00",
+          "endTime": "00:59",
+          "color": "#06b6d4",
+          "progress": 0
+        }
+      ],
+      "startTime": "01:00",
+      "endTime": "00:59"
+    },
+    "item-1-3-2": {
+      "id": "item-1-3-2",
+      "content": "Public Product Hunt and Hacker News release",
+      "note": "Target date for official public launch.",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-1-3",
+      "childIds": [],
+      "startDate": "2026-09-19",
+      "endDate": "2026-09-22",
+      "color": "#06b6d4",
+      "progress": 0,
+      "createdAt": "2026-09-01T17:36:31.798Z",
+      "updatedAt": "2026-09-02T14:20:17.930Z",
+      "timeBlocks": [
+        {
+          "id": "item-1-3-2-legacy",
+          "startDate": "2026-09-19",
+          "endDate": "2026-09-22",
+          "startTime": "00:00",
+          "endTime": "23:59",
+          "color": "#06b6d4",
+          "progress": 0
+        }
+      ],
+      "startTime": "00:00",
+      "endTime": "23:59"
+    },
+    "item-2": {
+      "id": "item-2",
+      "content": "Personal Daily Focus & Ideas",
+      "note": "Infinitely nested tasks with full outliner power. Press Enter for new items, Tab to indent.",
+      "completed": false,
+      "collapsed": false,
+      "parentId": null,
+      "childIds": [
+        "item-2-1",
+        "item-2-2",
+        "item-2-3"
+      ],
+      "startDate": "2026-09-01",
+      "endDate": "2026-09-08",
+      "color": "#14b8a6",
+      "progress": 33,
+      "createdAt": "2026-09-01T17:36:31.798Z",
+      "updatedAt": "2026-09-01T17:36:31.798Z"
+    },
+    "item-2-1": {
+      "id": "item-2-1",
+      "content": "Review pull requests and give code feedback",
+      "note": "",
+      "completed": true,
+      "collapsed": false,
+      "parentId": "item-2",
+      "childIds": [],
+      "startDate": "2026-09-01",
+      "endDate": "2026-09-02",
+      "color": "#14b8a6",
+      "progress": 100,
+      "createdAt": "2026-09-01T17:36:31.798Z",
+      "updatedAt": "2026-09-01T17:36:31.798Z"
+    },
+    "item-2-2": {
+      "id": "item-2-2",
+      "content": "Explore Gantt time zoom capabilities (Day / Week / Month)",
+      "note": "Try clicking the Zoom In button on any task!",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-2",
+      "childIds": [],
+      "startDate": "2026-09-02",
+      "endDate": "2026-09-04",
+      "color": "#14b8a6",
+      "progress": 0,
+      "createdAt": "2026-09-01T17:36:31.798Z",
+      "updatedAt": "2026-09-01T17:36:31.798Z"
+    },
+    "item-2-3": {
+      "id": "item-2-3",
+      "content": "Plan team retrospective and celebrate milestones 🎉",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-2",
+      "childIds": [],
+      "startDate": "2026-09-05",
+      "endDate": "2026-09-08",
+      "color": "#14b8a6",
+      "progress": 0,
+      "createdAt": "2026-09-01T17:36:31.798Z",
+      "updatedAt": "2026-09-01T17:36:31.798Z"
+    },
+    "item-pkcw2xp": {
+      "id": "item-pkcw2xp",
+      "content": "test",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-1-3",
+      "childIds": [],
+      "createdAt": "2026-09-01T17:56:13.101Z",
+      "updatedAt": "2026-09-02T18:20:08.791Z",
+      "progress": 0,
+      "startDate": "2026-09-04",
+      "endDate": "2026-09-08",
+      "timeBlocks": [
+        {
+          "id": "item-pkcw2xp-legacy",
+          "startDate": "2026-09-04",
+          "endDate": "2026-09-08",
+          "startTime": "01:00",
+          "endTime": "00:59",
+          "progress": 0
+        }
+      ],
+      "startTime": "01:00",
+      "endTime": "00:59"
+    },
+    "item-r10wcvp": {
+      "id": "item-r10wcvp",
+      "content": "test 2",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-1-3",
+      "childIds": [
+        "item-3seoxo3",
+        "item-78llepm",
+        "item-7ywddlu",
+        "item-9j8x2h3"
+      ],
+      "createdAt": "2026-09-01T17:56:42.785Z",
+      "updatedAt": "2026-09-02T17:12:42.875Z"
+    },
+    "item-q4skdyi": {
+      "id": "item-q4skdyi",
+      "content": "test",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-1-1-2-1",
+      "childIds": [],
+      "createdAt": "2026-09-01T18:12:11.406Z",
+      "updatedAt": "2026-09-02T18:00:40.221Z"
+    },
+    "item-3seoxo3": {
+      "id": "item-3seoxo3",
+      "content": "test 2.1",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-r10wcvp",
+      "childIds": [],
+      "createdAt": "2026-09-01T20:49:05.663Z",
+      "updatedAt": "2026-09-01T23:21:50.568Z"
+    },
+    "item-9j8x2h3": {
+      "id": "item-9j8x2h3",
+      "content": "test 2.2",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-r10wcvp",
+      "childIds": [
+        "item-j00v30r"
+      ],
+      "createdAt": "2026-09-01T20:49:11.845Z",
+      "updatedAt": "2026-09-01T21:32:32.761Z"
+    },
+    "item-j00v30r": {
+      "id": "item-j00v30r",
+      "content": "long test 2.2.1 long test 2.2.1 long test 2.2.1 long test 2.2.1 long test 2.2.1 long test 2.2.1 ",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-9j8x2h3",
+      "childIds": [],
+      "createdAt": "2026-09-01T20:57:03.800Z",
+      "updatedAt": "2026-09-02T18:21:58.234Z"
+    },
+    "item-78llepm": {
+      "id": "item-78llepm",
+      "content": "",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-r10wcvp",
+      "childIds": [],
+      "createdAt": "2026-09-01T22:01:06.147Z",
+      "updatedAt": "2026-09-01T22:01:11.782Z"
+    },
+    "item-0qair4b": {
+      "id": "item-0qair4b",
+      "content": "test 1",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-1-3",
+      "childIds": [
+        "item-ueq76fg",
+        "item-tbl6dl9",
+        "item-yf2l4mc",
+        "item-srb93g2"
+      ],
+      "createdAt": "2026-09-01T22:18:29.842Z",
+      "updatedAt": "2026-09-01T22:21:11.130Z"
+    },
+    "item-tbl6dl9": {
+      "id": "item-tbl6dl9",
+      "content": "test 1.1",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-0qair4b",
+      "childIds": [],
+      "createdAt": "2026-09-01T22:18:30.632Z",
+      "updatedAt": "2026-09-01T22:18:30.632Z"
+    },
+    "item-yf2l4mc": {
+      "id": "item-yf2l4mc",
+      "content": "test 1.2",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-0qair4b",
+      "childIds": [
+        "item-mgck2z1",
+        "item-w0k4omm",
+        "item-fsujrlv"
+      ],
+      "createdAt": "2026-09-01T22:18:30.632Z",
+      "updatedAt": "2026-09-01T22:18:30.632Z"
+    },
+    "item-mgck2z1": {
+      "id": "item-mgck2z1",
+      "content": "test 1.2.1",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-yf2l4mc",
+      "childIds": [],
+      "createdAt": "2026-09-01T22:18:30.632Z",
+      "updatedAt": "2026-09-01T22:18:30.632Z"
+    },
+    "item-w0k4omm": {
+      "id": "item-w0k4omm",
+      "content": "test 1.2.2",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-yf2l4mc",
+      "childIds": [],
+      "createdAt": "2026-09-01T22:18:30.632Z",
+      "updatedAt": "2026-09-01T22:18:30.632Z"
+    },
+    "item-fsujrlv": {
+      "id": "item-fsujrlv",
+      "content": "test 1.2.3",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-yf2l4mc",
+      "childIds": [],
+      "createdAt": "2026-09-01T22:18:30.632Z",
+      "updatedAt": "2026-09-01T22:18:30.632Z"
+    },
+    "item-srb93g2": {
+      "id": "item-srb93g2",
+      "content": "test 1.3",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-0qair4b",
+      "childIds": [],
+      "createdAt": "2026-09-01T22:18:30.632Z",
+      "updatedAt": "2026-09-01T22:18:30.632Z"
+    },
+    "item-low8t0g": {
+      "id": "item-low8t0g",
+      "content": "test 2",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-1-3",
+      "childIds": [
+        "item-jvxen45",
+        "item-ya4e54g"
+      ],
+      "createdAt": "2026-09-01T22:18:30.632Z",
+      "updatedAt": "2026-09-01T22:18:30.632Z"
+    },
+    "item-jvxen45": {
+      "id": "item-jvxen45",
+      "content": "test 2.1",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-low8t0g",
+      "childIds": [],
+      "createdAt": "2026-09-01T22:18:30.632Z",
+      "updatedAt": "2026-09-01T22:18:30.632Z"
+    },
+    "item-ya4e54g": {
+      "id": "item-ya4e54g",
+      "content": "test 2.2",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-low8t0g",
+      "childIds": [],
+      "createdAt": "2026-09-01T22:18:30.632Z",
+      "updatedAt": "2026-09-01T22:18:30.632Z"
+    },
+    "item-j2o25aj": {
+      "id": "item-j2o25aj",
+      "content": "test 3",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-1-3",
+      "childIds": [],
+      "createdAt": "2026-09-01T22:18:30.632Z",
+      "updatedAt": "2026-09-01T22:18:30.632Z"
+    },
+    "item-7h6c4xa": {
+      "id": "item-7h6c4xa",
+      "content": "test 4",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-1-3",
+      "childIds": [],
+      "createdAt": "2026-09-01T22:18:30.632Z",
+      "updatedAt": "2026-09-01T22:18:30.632Z"
+    },
+    "item-ueq76fg": {
+      "id": "item-ueq76fg",
+      "content": "",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-0qair4b",
+      "childIds": [],
+      "createdAt": "2026-09-01T22:21:11.130Z",
+      "updatedAt": "2026-09-01T22:21:15.206Z"
+    },
+    "item-pjk9yy2": {
+      "id": "item-pjk9yy2",
+      "content": "",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-1-1-2-1",
+      "childIds": [],
+      "createdAt": "2026-09-01T22:32:40.799Z",
+      "updatedAt": "2026-09-02T16:18:20.038Z",
+      "timeBlocks": [
+        {
+          "id": "tb-8y9ovmm",
+          "startDate": "2026-09-07",
+          "endDate": "2026-09-08",
+          "startTime": "12:00",
+          "endTime": "00:00",
+          "color": "#3b82f6"
+        }
+      ],
+      "startDate": "2026-09-07",
+      "endDate": "2026-09-08",
+      "startTime": "12:00",
+      "endTime": "00:00"
+    },
+    "item-o00zsbr": {
+      "id": "item-o00zsbr",
+      "content": "New subtask",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-1-1",
+      "childIds": [],
+      "color": "#6366f1",
+      "progress": 0,
+      "createdAt": "2026-09-02T17:05:38.134Z",
+      "updatedAt": "2026-09-02T17:05:38.134Z"
+    },
+    "item-7ywddlu": {
+      "id": "item-7ywddlu",
+      "content": "",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-r10wcvp",
+      "childIds": [],
+      "color": "#3b82f6",
+      "progress": 0,
+      "createdAt": "2026-09-02T17:12:04.455Z",
+      "updatedAt": "2026-09-02T17:12:42.875Z"
+    }
+  },
+  "createdAt": "2026-09-01T17:36:31.798Z",
+  "updatedAt": "2026-09-02T20:16:58.393Z"
+}

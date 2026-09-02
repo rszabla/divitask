@@ -1,0 +1,121 @@
+{
+  "id": "doc-b5f2q7w",
+  "title": "New Document",
+  "rootItemIds": [
+    "item-3fj8alm"
+  ],
+  "items": {
+    "item-3fj8alm": {
+      "id": "item-3fj8alm",
+      "content": "First task",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": null,
+      "childIds": [
+        "item-auofamv",
+        "item-tcuorvb",
+        "item-9wazkjv"
+      ],
+      "createdAt": "2026-09-01T21:00:50.765Z",
+      "updatedAt": "2026-09-01T22:14:58.345Z"
+    },
+    "item-auofamv": {
+      "id": "item-auofamv",
+      "content": "second task",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-3fj8alm",
+      "childIds": [],
+      "createdAt": "2026-09-01T22:14:42.069Z",
+      "updatedAt": "2026-09-01T22:14:48.283Z"
+    },
+    "item-tcuorvb": {
+      "id": "item-tcuorvb",
+      "content": "1.2",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-3fj8alm",
+      "childIds": [
+        "item-7s60h9x",
+        "item-4zg5rju",
+        "item-wpjau0h"
+      ],
+      "createdAt": "2026-09-01T22:14:48.283Z",
+      "updatedAt": "2026-09-01T22:15:07.260Z"
+    },
+    "item-9wazkjv": {
+      "id": "item-9wazkjv",
+      "content": "1.3",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-3fj8alm",
+      "childIds": [],
+      "createdAt": "2026-09-01T22:14:54.151Z",
+      "updatedAt": "2026-09-01T22:14:55.874Z"
+    },
+    "item-7s60h9x": {
+      "id": "item-7s60h9x",
+      "content": "1.2.1",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-tcuorvb",
+      "childIds": [],
+      "createdAt": "2026-09-01T22:14:58.197Z",
+      "updatedAt": "2026-09-01T22:15:01.124Z"
+    },
+    "item-4zg5rju": {
+      "id": "item-4zg5rju",
+      "content": "1.2.2",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-tcuorvb",
+      "childIds": [
+        "item-i9shyoz",
+        "item-5vdt2m6"
+      ],
+      "createdAt": "2026-09-01T22:15:01.124Z",
+      "updatedAt": "2026-09-01T22:15:11.478Z"
+    },
+    "item-wpjau0h": {
+      "id": "item-wpjau0h",
+      "content": "1.2.3",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-tcuorvb",
+      "childIds": [],
+      "createdAt": "2026-09-01T22:15:03.442Z",
+      "updatedAt": "2026-09-01T22:15:04.853Z"
+    },
+    "item-i9shyoz": {
+      "id": "item-i9shyoz",
+      "content": "1.2.2.1",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-4zg5rju",
+      "childIds": [],
+      "createdAt": "2026-09-01T22:15:05.970Z",
+      "updatedAt": "2026-09-01T22:15:11.478Z"
+    },
+    "item-5vdt2m6": {
+      "id": "item-5vdt2m6",
+      "content": "1.2.2.2",
+      "note": "",
+      "completed": false,
+      "collapsed": false,
+      "parentId": "item-4zg5rju",
+      "childIds": [],
+      "createdAt": "2026-09-01T22:15:11.478Z",
+      "updatedAt": "2026-09-01T22:15:15.748Z"
+    }
+  },
+  "createdAt": "2026-09-01T21:00:50.765Z",
+  "updatedAt": "2026-09-01T22:15:16.201Z"
+}
