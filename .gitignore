@@ -26,3 +26,9 @@ Thumbs.db
 
 # Temporary files
 *.tmp
+
+# Personal Notes (ignored from git)
+NOTES.md
+notes.md
+*.notes.md
+scratchpad.md
