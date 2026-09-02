@@ -23,7 +23,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./data:/app/data
+      - /docker/divitask/data:/app/data
 ```
 
 Start the container:

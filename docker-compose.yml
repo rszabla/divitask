@@ -15,4 +15,4 @@ services:
       - NODE_ENV=production
       - DATA_DIR=/app/data
     volumes:
-      - ${DATA_PATH:-/docker/divitask}:/app/data
+      - ${DATA_PATH:-/docker/divitask/data}:/app/data
