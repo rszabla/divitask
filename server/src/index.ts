@@ -157,10 +157,22 @@ app.post('/api/documents/import', (req, res) => {
   }
 });
 
-// Production: serve client build
+// Production: serve client build with PWA headers
 const clientDist = path.resolve(__dirname, '../../client/dist');
 if (fs.existsSync(clientDist)) {
-  app.use(express.static(clientDist));
+  app.use(
+    express.static(clientDist, {
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith('sw.js')) {
+          res.setHeader('Service-Worker-Allowed', '/');
+          res.setHeader('Cache-Control', 'no-cache');
+        } else if (filePath.endsWith('manifest.json') || filePath.endsWith('manifest.webmanifest')) {
+          res.setHeader('Content-Type', 'application/manifest+json; charset=UTF-8');
+          res.setHeader('Access-Control-Allow-Origin', '*');
+        }
+      },
+    })
+  );
   app.get('*', (req, res) => {
     res.sendFile(path.join(clientDist, 'index.html'));
   });

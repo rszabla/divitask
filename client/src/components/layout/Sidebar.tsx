@@ -70,6 +70,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [draggedDocId, setDraggedDocId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<{ id: string; position: 'before' | 'after' } | null>(null);
 
+  // PWA Install prompt handling
+  const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setDeferredInstallPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+  }, []);
+
+  const handleInstallPWA = async () => {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    const { outcome } = await deferredInstallPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredInstallPrompt(null);
+    }
+  };
+
   const handleMouseDownResize = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsResizing(true);
@@ -175,6 +196,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         <div className="flex flex-col gap-2">
+          {deferredInstallPrompt && (
+            <button
+              onClick={handleInstallPWA}
+              className="p-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 rounded-lg hover:bg-blue-50 dark:hover:bg-zinc-800 transition-colors"
+              title="Install DiviTask App (PWA)"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+          )}
           <button
             onClick={onOpenSettings}
             className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-zinc-800 transition-colors"
@@ -416,6 +446,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <HelpCircle className="w-4 h-4 text-gray-400" />
           <span>Shortcuts & Help</span>
         </button>
+
+        {deferredInstallPrompt && (
+          <button
+            onClick={handleInstallPWA}
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors font-medium text-xs shadow-2xs border border-blue-200 dark:border-blue-900/60"
+          >
+            <Download className="w-4 h-4 text-blue-500 flex-shrink-0" />
+            <span className="truncate">Install Web App</span>
+          </button>
+        )}
 
         <button
           onClick={onOpenSettings}
