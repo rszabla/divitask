@@ -15,11 +15,32 @@
    - **Repository URL**: `https://github.com/rszabla/divitask.git`
    - **Repository reference**: `refs/heads/main`
    - **Compose path**: `docker-compose.yml`
-4. *(Optional)* Under **Environment variables**, you can customize settings:
+4. *(Optional)* Under **Environment variables**, customize settings:
    - `HOST_PORT`: Server port (default: `3000`)
    - `DATA_PATH`: Host folder for tasks (default: `/docker/divitask/data`)
 5. *(Optional)* Turn on **Automatic updates** (polling or webhook).
 6. Click **Deploy the stack**.
+
+### 🔄 Updating the Stack in Portainer
+1. Go to **Stacks** ➔ click **divitask**.
+2. Click **Pull and redeploy**.
+3. **Important**: Leave **"Re-pull image" OFF (unchecked)** so Docker builds from the updated `Dockerfile` rather than attempting to pull a non-existent image from Docker Hub.
+4. Click **Update**.
+
+---
+
+## 📱 Progressive Web App (PWA) & Mobile
+
+DiviTask is built mobile-first and installable as a standalone PWA:
+- **Zero Browser Chrome**: Runs in standalone full-screen mode, reclaiming ~20% of vertical screen space on mobile phones.
+- **Offline Capable**: Pre-caches application bundles via Service Worker for instant offline loading.
+- **Adaptive Layout**:
+  - **Portrait Mode (`< 640px`)**: Automatically hides the left task table and dedicates 100% of the screen width to the zoomable timeline.
+  - **Landscape & Desktop (`≥ 640px`)**: Automatically displays the interactive task hierarchy alongside the timeline with a resizable splitter.
+- **Touch Drag Controls**: Touch and drag selected timeblocks to move them, drag edge handles to adjust start/end times, and drag task bullets to reorder or nest.
+- **Installation**:
+  - **Android (Chrome/Firefox)**: Tap **"Install Web App"** in the sidebar or select **Install / Add to Home screen** from the browser menu (HTTPS recommended).
+  - **iOS (Safari)**: Tap the Share button (⎋) ➔ **Add to Home Screen** (⊕).
 
 ---
 
