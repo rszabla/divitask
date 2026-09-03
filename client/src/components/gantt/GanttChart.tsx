@@ -6,6 +6,7 @@ import {
   MoreVertical,
   ZoomIn,
   Trash2,
+  Palette,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -36,18 +37,38 @@ import {
 import { GanttHeader } from './GanttHeader.js';
 import { GanttTaskBar } from './GanttTaskBar.js';
 import { TaskDetailModal } from './TaskDetailModal.js';
+import { ItemMenu } from '../outliner/ItemMenu.js';
+
+export interface TimelineViewState {
+  zoomLevel: number;
+  viewDate: Date;
+  scrollLeft: number;
+}
+
+const COLOR_PRESETS = [
+  '#3b82f6', // blue
+  '#10b981', // green
+  '#f59e0b', // amber
+  '#ef4444', // red
+  '#8b5cf6', // purple
+  '#ec4899', // pink
+  '#06b6d4', // cyan
+  '#64748b', // slate
+];
 
 interface GanttChartProps {
   document: TaskDocument;
   zoomItemId: string | null;
   settings: AppSettings;
-  onUpdateDocument: (doc: TaskDocument) => void;
+  onUpdateDocument: (doc: TaskDocument, isStructural?: boolean) => void;
   onBackToOutline?: () => void;
   onZoomIntoNode: (itemId: string) => void;
   hideCompleted?: boolean;
+  initialViewState?: TimelineViewState;
+  onSaveViewState?: (state: TimelineViewState) => void;
+  isZenMode?: boolean;
+  onToggleZenMode?: () => void;
 }
-
-const ROW_HEIGHT = 38;
 
 export const GanttChart: React.FC<GanttChartProps> = ({
   document,
@@ -57,14 +78,36 @@ export const GanttChart: React.FC<GanttChartProps> = ({
   onBackToOutline: _onBackToOutline,
   onZoomIntoNode,
   hideCompleted = false,
+  initialViewState,
+  onSaveViewState,
+  isZenMode,
+  onToggleZenMode,
 }) => {
-  // Zoom level: 1 (1 Year), 2 (1 Quarter / Term), 3 (1 Month), 4 (1 Week), 5 (1 Day)
-  const [zoomLevel, setZoomLevel] = useState<number>(4);
-  const [viewDate, setViewDate] = useState<Date>(() => new Date());
-  const [collapsedSet, setCollapsedSet] = useState<Set<string>>(new Set());
+  // Zoom level & view date: restore from initialViewState if present
+  const [zoomLevel, setZoomLevel] = useState<number>(() => initialViewState?.zoomLevel ?? 4);
+  const [viewDate, setViewDate] = useState<Date>(() => initialViewState?.viewDate ?? new Date());
   const [treePaneWidth, setTreePaneWidth] = useState(360);
   const [isResizingSplitter, setIsResizingSplitter] = useState(false);
   const [editingModalNode, setEditingModalNode] = useState<FlattenedGanttNode | null>(null);
+  const [taskMenuInfo, setTaskMenuInfo] = useState<{
+    item: TaskItem;
+    position: { x: number; y: number };
+  } | null>(null);
+
+  // Short screen detection (e.g. mobile phone in landscape orientation)
+  const [isShortScreen, setIsShortScreen] = useState(() => {
+    return typeof window !== 'undefined' ? window.innerHeight <= 520 : false;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsShortScreen(window.innerHeight <= 520);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const rowHeight = isShortScreen ? 32 : 38;
 
   // In-place outliner editing state
   const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
@@ -79,6 +122,19 @@ export const GanttChart: React.FC<GanttChartProps> = ({
 
   // Selection state for time blocks: set of `${itemId}:::${blockId}`
   const [selectedBlockKeys, setSelectedBlockKeys] = useState<Set<string>>(new Set());
+  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
+  const colorPickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isColorPickerOpen) return;
+    const handleOutside = (e: MouseEvent) => {
+      if (colorPickerRef.current && !colorPickerRef.current.contains(e.target as Node)) {
+        setIsColorPickerOpen(false);
+      }
+    };
+    window.addEventListener('mousedown', handleOutside);
+    return () => window.removeEventListener('mousedown', handleOutside);
+  }, [isColorPickerOpen]);
 
   // Rectangle marquee selection state (canvas coordinates)
   const [selectionMarquee, setSelectionMarquee] = useState<{
@@ -123,7 +179,28 @@ export const GanttChart: React.FC<GanttChartProps> = ({
     });
   };
 
-  const handleRightScroll = () => {
+  // Restore initial horizontal scroll if provided
+  useEffect(() => {
+    if (initialViewState?.scrollLeft !== undefined && timelineContainerRef.current) {
+      timelineContainerRef.current.scrollLeft = initialViewState.scrollLeft;
+    }
+  }, []);
+
+  // Sync scroll and report view state updates
+  useEffect(() => {
+    onSaveViewState?.({
+      zoomLevel,
+      viewDate,
+      scrollLeft: timelineContainerRef.current?.scrollLeft || 0,
+    });
+  }, [zoomLevel, viewDate, onSaveViewState]);
+
+  const handleRightScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    onSaveViewState?.({
+      zoomLevel,
+      viewDate,
+      scrollLeft: e.currentTarget.scrollLeft,
+    });
     if (isSyncingScrollRef.current) return;
     if (!timelineContainerRef.current || !leftTableContainerRef.current) return;
     isSyncingScrollRef.current = true;
@@ -133,10 +210,10 @@ export const GanttChart: React.FC<GanttChartProps> = ({
     });
   };
 
-  // Flatten the subtree
+  // Flatten the subtree (inherits item.collapsed from document items)
   const allNodes = useMemo(() => {
-    return flattenSubtreeForGantt(document, zoomItemId, collapsedSet);
-  }, [document, zoomItemId, collapsedSet]);
+    return flattenSubtreeForGantt(document, zoomItemId, new Set());
+  }, [document, zoomItemId]);
 
   const visibleNodes = useMemo(() => {
     if (!hideCompleted) return allNodes;
@@ -155,9 +232,10 @@ export const GanttChart: React.FC<GanttChartProps> = ({
       windowStart,
       windowEnd,
       timelineContainerWidth,
-      settings
+      settings,
+      isShortScreen
     );
-  }, [zoomLevel, windowStart, windowEnd, timelineContainerWidth, settings]);
+  }, [zoomLevel, windowStart, windowEnd, timelineContainerWidth, settings, isShortScreen]);
 
   const { headerTiers, minorUnits, minorDurationMs, totalTimelineWidth, totalHeaderHeight, todayX } = subdivisions;
 
@@ -279,7 +357,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({
     let newRootIds = [...document.rootItemIds];
 
     // If targetItem has children and is expanded, insert as its first child directly below it!
-    const isExpanded = !collapsedSet.has(targetId);
+    const isExpanded = !document.items[targetId]?.collapsed;
     if (targetItem.childIds.length > 0 && isExpanded) {
       newItem.parentId = targetId;
       newItems[targetId] = {
@@ -320,6 +398,49 @@ export const GanttChart: React.FC<GanttChartProps> = ({
     onUpdateDocument({
       ...document,
       rootItemIds: newRootIds,
+      items: newItems,
+      updatedAt: now,
+    });
+
+    setFocusedItemId(newId);
+    setTimeout(() => {
+      inputRefs.current[newId]?.focus();
+    }, 50);
+  };
+
+  // Add subtask (make child of target)
+  const handleAddSubtask = (parentId: string) => {
+    const parent = document.items[parentId];
+    if (!parent) return;
+
+    const newId = 'item-' + Math.random().toString(36).substring(2, 9);
+    const now = new Date().toISOString();
+
+    const newItem: TaskItem = {
+      id: newId,
+      content: '',
+      note: '',
+      completed: false,
+      collapsed: false,
+      parentId,
+      childIds: [],
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const newItems = {
+      ...document.items,
+      [newId]: newItem,
+      [parentId]: {
+        ...parent,
+        collapsed: false,
+        childIds: [...parent.childIds, newId],
+        updatedAt: now,
+      },
+    };
+
+    onUpdateDocument({
+      ...document,
       items: newItems,
       updatedAt: now,
     });
@@ -743,7 +864,100 @@ export const GanttChart: React.FC<GanttChartProps> = ({
     }
   };
 
-  // Keyboard shortcut for Delete / Backspace / Escape
+  // Batch change color of all currently selected blocks
+  const handleBatchColor = (newColor: string) => {
+    if (selectedBlockKeys.size === 0) return;
+    const newItems = { ...document.items };
+    let hasChanges = false;
+
+    selectedBlockKeys.forEach((key) => {
+      const [itemId, blockId] = key.split(':::');
+      const item = newItems[itemId];
+      if (item) {
+        const blocks = getItemTimeBlocks(item);
+        const updatedBlocks = blocks.map((b) => (b.id === blockId ? { ...b, color: newColor } : b));
+        newItems[itemId] = {
+          ...item,
+          color: newColor,
+          timeBlocks: updatedBlocks,
+          updatedAt: new Date().toISOString(),
+        };
+        hasChanges = true;
+      }
+    });
+
+    if (hasChanges) {
+      onUpdateDocument({
+        ...document,
+        items: newItems,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+  };
+
+  // Duplicate an item in timeline view
+  const handleDuplicate = (itemId: string) => {
+    const original = document.items[itemId];
+    if (!original) return;
+
+    const now = new Date().toISOString();
+    const idMap: Record<string, string> = {};
+    const descendantIds = getAllDescendantIds(document.items, itemId);
+    const allIds = [itemId, ...descendantIds];
+
+    allIds.forEach((id) => {
+      idMap[id] = 'item-' + Math.random().toString(36).substring(2, 9);
+    });
+
+    const newItems = { ...document.items };
+
+    allIds.forEach((id) => {
+      const orig = document.items[id];
+      const newId = idMap[id];
+      newItems[newId] = {
+        ...orig,
+        id: newId,
+        content: id === itemId ? `${orig.content} (Copy)` : orig.content,
+        parentId: id === itemId ? orig.parentId : idMap[orig.parentId!] || null,
+        childIds: orig.childIds.map((c) => idMap[c]).filter(Boolean),
+        createdAt: now,
+        updatedAt: now,
+      };
+    });
+
+    const newCloneRootId = idMap[itemId];
+
+    if (original.parentId && newItems[original.parentId]) {
+      const parent = newItems[original.parentId];
+      const idx = parent.childIds.indexOf(itemId);
+      const newChildIds = [...parent.childIds];
+      newChildIds.splice(idx + 1, 0, newCloneRootId);
+      newItems[original.parentId] = {
+        ...parent,
+        childIds: newChildIds,
+        updatedAt: now,
+      };
+
+      onUpdateDocument({
+        ...document,
+        items: newItems,
+        updatedAt: now,
+      });
+    } else {
+      const idx = document.rootItemIds.indexOf(itemId);
+      const newRootIds = [...document.rootItemIds];
+      newRootIds.splice(idx + 1, 0, newCloneRootId);
+
+      onUpdateDocument({
+        ...document,
+        rootItemIds: newRootIds,
+        items: newItems,
+        updatedAt: now,
+      });
+    }
+  };
+
+  // Keyboard shortcut for Delete / Escape (Backspace does NOT delete blocks)
   useEffect(() => {
     const handleKeyDownGlobal = (e: KeyboardEvent) => {
       const active = window.document.activeElement;
@@ -756,13 +970,15 @@ export const GanttChart: React.FC<GanttChartProps> = ({
         return;
       }
 
-      if (e.key === 'Delete' || e.key === 'Backspace') {
+      if (e.key === 'Delete') {
         if (selectedBlockKeys.size > 0) {
           e.preventDefault();
           handleBatchDelete();
         }
       } else if (e.key === 'Escape') {
-        if (selectedBlockKeys.size > 0) {
+        if (isColorPickerOpen) {
+          setIsColorPickerOpen(false);
+        } else if (selectedBlockKeys.size > 0) {
           setSelectedBlockKeys(new Set());
         }
       }
@@ -776,6 +992,9 @@ export const GanttChart: React.FC<GanttChartProps> = ({
   const handleTimelineMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
     if (isDraggingRef.current) return;
+    if (selectedBlockKeys.size > 0 && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+      setSelectedBlockKeys(new Set());
+    }
 
     const target = e.target as HTMLElement;
     if (target.closest('.group\\/bar') || target.closest('button') || target.closest('input')) {
@@ -800,8 +1019,6 @@ export const GanttChart: React.FC<GanttChartProps> = ({
 
   // Marquee mousemove & mouseup listener
   useEffect(() => {
-    const totalWindowMs = windowEnd.getTime() - windowStart.getTime();
-
     const handleMouseMove = (e: MouseEvent) => {
       if (!marqueeStartRef.current || !timelineContainerRef.current) return;
 
@@ -829,17 +1046,20 @@ export const GanttChart: React.FC<GanttChartProps> = ({
         const newSelected = new Set<string>(e.shiftKey ? selectedBlockKeys : []);
 
         visibleNodes.forEach((node, rowIdx) => {
-          const rowTop = totalHeaderHeight + rowIdx * ROW_HEIGHT;
-          const rowBottom = rowTop + ROW_HEIGHT;
+          const rowTop = totalHeaderHeight + rowIdx * rowHeight;
+          const rowBottom = rowTop + rowHeight;
 
           if (rowBottom >= boxTop && rowTop <= boxBottom) {
             const blocks = getItemTimeBlocks(node.item);
             blocks.forEach((b) => {
               const bStart = parseDateTimeSafe(b.startDate, b.startTime) || windowStart;
-              const bEnd = parseDateTimeSafe(b.endDate, b.endTime, true) || windowEnd;
+              const bEnd = parseDateTimeSafe(b.endDate, b.endTime) || windowEnd;
+              const sMs = bStart.getTime();
+              const eMs = bEnd.getTime();
 
-              const bLeft = ((bStart.getTime() - windowStart.getTime()) / totalWindowMs) * totalTimelineWidth;
-              const bRight = ((bEnd.getTime() - windowStart.getTime()) / totalWindowMs) * totalTimelineWidth;
+              const totalWindowMs = Math.max(windowEnd.getTime() - windowStart.getTime(), 1000);
+              const bLeft = ((sMs - windowStart.getTime()) / totalWindowMs) * totalTimelineWidth;
+              const bRight = ((eMs - windowStart.getTime()) / totalWindowMs) * totalTimelineWidth;
 
               if (bRight >= boxLeft && bLeft <= boxRight) {
                 newSelected.add(`${node.id}:::${b.id}`);
@@ -849,6 +1069,9 @@ export const GanttChart: React.FC<GanttChartProps> = ({
         });
 
         setSelectedBlockKeys(newSelected);
+      } else {
+        marqueeActiveRef.current = false;
+        setSelectionMarquee(null);
       }
     };
 
@@ -871,18 +1094,18 @@ export const GanttChart: React.FC<GanttChartProps> = ({
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [totalHeaderHeight, visibleNodes, windowStart, windowEnd, totalTimelineWidth, selectedBlockKeys]);
+  }, [totalHeaderHeight, visibleNodes, windowStart, windowEnd, totalTimelineWidth, selectedBlockKeys, rowHeight]);
 
   // Start dragging a time block (single or batch)
   const handleStartDrag = (
     type: 'move' | 'resize-start' | 'resize-end',
-    e: React.MouseEvent,
+    e: React.MouseEvent | React.TouchEvent,
     node: FlattenedGanttNode,
     blockId: string
   ) => {
-    e.preventDefault();
     e.stopPropagation();
 
+    const clientX = 'clientX' in e ? e.clientX : e.touches[0].clientX;
     const clickedKey = `${node.id}:::${blockId}`;
     let currentSelected = selectedBlockKeys;
     if (!selectedBlockKeys.has(clickedKey)) {
@@ -925,7 +1148,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({
       type,
       itemId: node.id,
       blockId,
-      startX: e.clientX,
+      startX: clientX,
       initialStartMs: parsedStart.getTime(),
       initialEndMs: parsedEnd.getTime(),
       currentStartMs: parsedStart.getTime(),
@@ -934,14 +1157,14 @@ export const GanttChart: React.FC<GanttChartProps> = ({
     });
   };
 
-  // Dragging mouse listener
+  // Dragging mouse & touch listener
   useEffect(() => {
     if (!dragState) return;
 
     const totalWindowMs = windowEnd.getTime() - windowStart.getTime();
 
-    const handleMouseMove = (e: MouseEvent) => {
-      const deltaPixels = e.clientX - dragState.startX;
+    const handleMove = (clientX: number) => {
+      const deltaPixels = clientX - dragState.startX;
       const deltaMs = (deltaPixels / totalTimelineWidth) * totalWindowMs;
       const snappedDeltaMs = Math.round(deltaMs / minorDurationMs) * minorDurationMs;
 
@@ -965,7 +1188,18 @@ export const GanttChart: React.FC<GanttChartProps> = ({
       }
     };
 
-    const handleMouseUp = () => {
+    const handleMouseMove = (e: MouseEvent) => {
+      handleMove(e.clientX);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches && e.touches[0]) {
+        e.preventDefault();
+        handleMove(e.touches[0].clientX);
+      }
+    };
+
+    const handleEnd = () => {
       if (!dragState) return;
 
       const deltaMs = dragState.currentStartMs - dragState.initialStartMs;
@@ -1020,7 +1254,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({
           updatedAt: new Date().toISOString(),
         });
       }
-      // Case 2: Single block translation / resize
+      // Case 2: Single block moved or resized
       else {
         const targetItem = document.items[dragState.itemId];
         if (targetItem) {
@@ -1082,10 +1316,17 @@ export const GanttChart: React.FC<GanttChartProps> = ({
     };
 
     window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('mouseup', handleEnd);
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleEnd);
+    window.addEventListener('touchcancel', handleEnd);
+
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mouseup', handleEnd);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleEnd);
+      window.removeEventListener('touchcancel', handleEnd);
     };
   }, [dragState, windowStart, windowEnd, totalTimelineWidth, minorDurationMs, document, onUpdateDocument]);
 
@@ -1140,17 +1381,23 @@ export const GanttChart: React.FC<GanttChartProps> = ({
     });
   };
 
-  // Toggle row collapse in Gantt
+  // Toggle row collapse in Gantt & persist to document items
   const handleToggleRowCollapse = (nodeId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setCollapsedSet((prev) => {
-      const next = new Set(prev);
-      if (next.has(nodeId)) {
-        next.delete(nodeId);
-      } else {
-        next.add(nodeId);
-      }
-      return next;
+    const item = document.items[nodeId];
+    if (!item) return;
+    const nextCollapsed = !item.collapsed;
+    onUpdateDocument({
+      ...document,
+      items: {
+        ...document.items,
+        [nodeId]: {
+          ...item,
+          collapsed: nextCollapsed,
+          updatedAt: new Date().toISOString(),
+        },
+      },
+      updatedAt: new Date().toISOString(),
     });
   };
 
@@ -1169,6 +1416,9 @@ export const GanttChart: React.FC<GanttChartProps> = ({
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
         onSetZoomLevel={handleSetZoomLevel}
+        isZenMode={isZenMode}
+        onToggleZenMode={onToggleZenMode}
+        isShortScreen={isShortScreen}
       />
 
       {/* Floating Drag Info Tooltip */}
@@ -1209,10 +1459,10 @@ export const GanttChart: React.FC<GanttChartProps> = ({
 
       {/* Main Split Body: Left Task Table & Right Zoomable Timeline (SYNCHRONIZED VERTICAL SCROLL!) */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Left Pane: Interactive Outliner Task Table */}
+        {/* Left Pane: Interactive Outliner Task Table (Hidden on mobile portrait; visible in landscape & desktop) */}
         <div
           style={{ width: `${treePaneWidth}px` }}
-          className="flex-shrink-0 flex flex-col border-r border-gray-200 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50 min-w-[220px]"
+          className="hidden sm:flex flex-shrink-0 flex-col border-r border-gray-200 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50 min-w-[220px]"
         >
           {/* Table Header (Duration column removed as requested) */}
           <div
@@ -1239,12 +1489,16 @@ export const GanttChart: React.FC<GanttChartProps> = ({
                 return (
                   <div
                     key={node.id}
+                    data-task-row-id={node.id}
                     style={{
-                      height: `${ROW_HEIGHT}px`,
+                      height: `${rowHeight}px`,
                       paddingLeft: `${Math.max(node.depth * 18, 10)}px`,
                     }}
                     onDragOver={(e) => handleRowDragOver(e, node.id)}
                     onDrop={(e) => handleRowDrop(e, node.id)}
+                    onMouseDown={() => {
+                      if (selectedBlockKeys.size > 0) setSelectedBlockKeys(new Set());
+                    }}
                     className={`group flex items-center pr-3 transition-colors text-xs relative min-w-max ${
                       isFocused
                         ? 'bg-blue-50/70 dark:bg-zinc-800/80'
@@ -1259,8 +1513,8 @@ export const GanttChart: React.FC<GanttChartProps> = ({
                       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 z-30 pointer-events-none" />
                     )}
 
-                    {/* Left-Hand Hover Icons: "Focus on task" and "Task & Timeline details" to the left of the collapse icon */}
-                    <div className="w-8 flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                    {/* Left-Hand Hover Icons: "Focus on task" and "Task menu" to the left of the collapse icon */}
+                    <div className="w-8 flex items-center justify-end gap-0.5 opacity-60 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex-shrink-0">
                       <button
                         onClick={() => onZoomIntoNode(node.id)}
                         className="p-0.5 text-gray-400 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 rounded"
@@ -1269,9 +1523,16 @@ export const GanttChart: React.FC<GanttChartProps> = ({
                         <ZoomIn className="w-3 h-3" />
                       </button>
                       <button
-                        onClick={() => setEditingModalNode(node)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                          setTaskMenuInfo({
+                            item: node.item,
+                            position: { x: rect.left, y: rect.bottom + 4 },
+                          });
+                        }}
                         className="p-0.5 text-gray-400 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 rounded"
-                        title="Task & Timeline details"
+                        title="Task menu"
                       >
                         <MoreVertical className="w-3 h-3" />
                       </button>
@@ -1300,11 +1561,40 @@ export const GanttChart: React.FC<GanttChartProps> = ({
                     <div
                       draggable
                       onDragStart={(e) => handleBulletDragStart(e, node.id)}
+                      onTouchStart={(e) => {
+                        e.stopPropagation();
+                        setDragInfo({ draggedId: node.id, targetId: null, position: null });
+                      }}
+                      onTouchMove={(e) => {
+                        e.stopPropagation();
+                        if (e.touches && e.touches[0]) {
+                          const touch = e.touches[0];
+                          const targetEl = window.document.elementFromPoint(touch.clientX, touch.clientY);
+                          const targetRow = targetEl?.closest('[data-task-row-id]');
+                          if (targetRow) {
+                            const targetId = targetRow.getAttribute('data-task-row-id');
+                            if (targetId && targetId !== node.id) {
+                              const rect = targetRow.getBoundingClientRect();
+                              const midY = rect.top + rect.height / 2;
+                              const pos: 'before' | 'after' = touch.clientY < midY ? 'before' : 'after';
+                              setDragInfo({ draggedId: node.id, targetId, position: pos });
+                            }
+                          }
+                        }
+                      }}
+                      onTouchEnd={(e) => {
+                        e.stopPropagation();
+                        if (dragInfo && dragInfo.targetId && dragInfo.position) {
+                          handleRowDrop(e as any, dragInfo.targetId);
+                        } else {
+                          setDragInfo(null);
+                        }
+                      }}
                       onClick={(e) => {
                         e.stopPropagation();
                         onZoomIntoNode(node.id);
                       }}
-                      className="group/bullet relative w-4 h-4 flex items-center justify-center cursor-grab active:cursor-grabbing hover:bg-gray-200 dark:hover:bg-zinc-700 rounded-full mr-1.5 transition-colors flex-shrink-0"
+                      className="group/bullet relative w-4 h-4 flex items-center justify-center cursor-grab active:cursor-grabbing hover:bg-gray-200 dark:hover:bg-zinc-700 rounded-full mr-1.5 transition-colors flex-shrink-0 touch-none"
                       title="Click to focus • Drag to reorder"
                     >
                       <div
@@ -1352,6 +1642,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({
                       onFocus={() => {
                         setFocusedItemId(node.id);
                         handleTaskNameClick(node);
+                        if (selectedBlockKeys.size > 0) setSelectedBlockKeys(new Set());
                       }}
                       onKeyDown={(e) => handleKeyDown(e, node, rowIdx)}
                       placeholder="Untitled task..."
@@ -1371,10 +1662,10 @@ export const GanttChart: React.FC<GanttChartProps> = ({
           </div>
         </div>
 
-        {/* Resizer Splitter Bar */}
+        {/* Resizer Splitter Bar (hidden on mobile portrait screens) */}
         <div
           onMouseDown={handleSplitterMouseDown}
-          className={`w-1 cursor-col-resize hover:bg-blue-500 active:bg-blue-600 transition-colors z-20 ${
+          className={`hidden sm:block w-1 cursor-col-resize hover:bg-blue-500 active:bg-blue-600 transition-colors z-20 ${
             isResizingSplitter ? 'bg-blue-500' : 'bg-gray-200 dark:border-zinc-800'
           }`}
           title="Drag to resize table width"
@@ -1385,7 +1676,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({
           ref={timelineContainerRef}
           onScroll={handleRightScroll}
           onMouseDown={handleTimelineMouseDown}
-          className="flex-1 overflow-y-auto overflow-x-auto relative bg-white dark:bg-zinc-950"
+          className="flex-1 overflow-y-auto overflow-x-auto relative bg-white dark:bg-zinc-950 w-full"
         >
           <div
             style={{ width: `${totalTimelineWidth}px` }}
@@ -1518,7 +1809,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({
                 return (
                   <div
                     key={node.id}
-                    style={{ height: `${ROW_HEIGHT}px` }}
+                    style={{ height: `${rowHeight}px` }}
                     onDoubleClick={(e) => handleTimelineRowDoubleClick(node, e)}
                     className="relative border-b border-gray-100/60 dark:border-zinc-800/40 hover:bg-blue-50/20 dark:hover:bg-blue-950/10 cursor-cell transition-colors"
                     title="Double-click empty area to create a time block"
@@ -1567,7 +1858,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({
                           isDragging={isDraggingThisBlock}
                           dragStartMs={effectiveDragStartMs}
                           dragEndMs={effectiveDragEndMs}
-                          rowHeight={ROW_HEIGHT}
+                          rowHeight={rowHeight}
                         />
                       );
                     })}
@@ -1585,17 +1876,72 @@ export const GanttChart: React.FC<GanttChartProps> = ({
           <span className="text-xs font-semibold select-none">
             {selectedBlockKeys.size} {selectedBlockKeys.size === 1 ? 'block' : 'blocks'} selected
           </span>
+          {/* Collapsible Color Chooser */}
+          <div className="relative" ref={colorPickerRef}>
+            <button
+              type="button"
+              onClick={() => setIsColorPickerOpen((prev) => !prev)}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg transition-colors border ${
+                isColorPickerOpen
+                  ? 'bg-gray-800 text-white border-blue-500 shadow-xs'
+                  : 'bg-gray-800/80 text-gray-200 hover:text-white hover:bg-gray-800 border-gray-700'
+              }`}
+              title="Change timeblock color"
+            >
+              <Palette className="w-3.5 h-3.5 text-amber-400" />
+              <span>Color</span>
+            </button>
+
+            {/* Color Picker Popover */}
+            {isColorPickerOpen && (
+              <div className="absolute bottom-full mb-2.5 left-1/2 -translate-x-1/2 p-2.5 bg-gray-900/95 text-white rounded-xl shadow-2xl border border-gray-700 flex flex-col gap-2 z-50 animate-in fade-in zoom-in-95 duration-100 min-w-[140px]">
+                <div className="text-[10px] font-semibold text-gray-400 px-0.5 select-none uppercase tracking-wider">
+                  Preset Colors
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {COLOR_PRESETS.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => {
+                        handleBatchColor(c);
+                        setIsColorPickerOpen(false);
+                      }}
+                      className="w-5 h-5 rounded-full transition-transform hover:scale-125 border border-white/20 shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      style={{ backgroundColor: c }}
+                      title={`Set color ${c}`}
+                    />
+                  ))}
+                </div>
+                <label className="flex items-center gap-2 pt-1.5 border-t border-gray-800 cursor-pointer text-xs text-gray-300 hover:text-white transition-colors">
+                  <input
+                    type="color"
+                    onChange={(e) => {
+                      handleBatchColor(e.target.value);
+                      setIsColorPickerOpen(false);
+                    }}
+                    className="w-4 h-4 rounded cursor-pointer border-0 bg-transparent p-0"
+                    title="Custom color"
+                  />
+                  <span>Custom...</span>
+                </label>
+              </div>
+            )}
+          </div>
           <div className="h-3.5 w-px bg-gray-700" />
           <button
             onClick={handleBatchDelete}
             className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-rose-600 hover:bg-rose-700 text-white rounded-lg transition-colors shadow-xs"
-            title="Delete selected blocks (Delete or Backspace)"
+            title="Delete selected blocks (Delete)"
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span>Delete</span>
           </button>
           <button
-            onClick={() => setSelectedBlockKeys(new Set())}
+            onClick={() => {
+              setSelectedBlockKeys(new Set());
+              setIsColorPickerOpen(false);
+            }}
             className="px-2.5 py-1 text-xs text-gray-400 hover:text-white rounded transition-colors"
             title="Clear selection (Esc)"
           >
@@ -1648,6 +1994,57 @@ export const GanttChart: React.FC<GanttChartProps> = ({
             });
           }}
           onClose={() => setEditingModalNode(null)}
+        />
+      )}
+
+      {/* Task Context Menu Dropdown */}
+      {taskMenuInfo && (
+        <ItemMenu
+          item={document.items[taskMenuInfo.item.id] || taskMenuInfo.item}
+          position={taskMenuInfo.position}
+          onClose={() => setTaskMenuInfo(null)}
+          onZoomIn={() => onZoomIntoNode(taskMenuInfo.item.id)}
+          onAddSubtask={() => handleAddSubtask(taskMenuInfo.item.id)}
+          onAddNote={() => {}}
+          hideAddNote={true}
+          onOpenDatePicker={() => {
+            const n = visibleNodes.find((vn) => vn.id === taskMenuInfo.item.id);
+            if (n) setEditingModalNode(n);
+          }}
+          onToggleComplete={() => {
+            const it = document.items[taskMenuInfo.item.id] || taskMenuInfo.item;
+            const next = !it.completed;
+            onUpdateDocument({
+              ...document,
+              items: {
+                ...document.items,
+                [it.id]: {
+                  ...it,
+                  completed: next,
+                  progress: next ? 100 : it.progress === 100 ? 0 : it.progress,
+                  updatedAt: new Date().toISOString(),
+                },
+              },
+              updatedAt: new Date().toISOString(),
+            });
+          }}
+          onIndent={() => {
+            handleIndent(taskMenuInfo.item.id);
+          }}
+          onUnindent={() => {
+            handleUnindent(taskMenuInfo.item.id);
+          }}
+          onDuplicate={() => {
+            handleDuplicate(taskMenuInfo.item.id);
+          }}
+          onDelete={() => {
+            handleDeleteItem(taskMenuInfo.item.id);
+          }}
+          canIndent={(() => {
+            const idx = visibleNodes.findIndex((vn) => vn.id === taskMenuInfo.item.id);
+            return idx > 0;
+          })()}
+          canUnindent={Boolean(taskMenuInfo.item.parentId && taskMenuInfo.item.parentId !== zoomItemId)}
         />
       )}
     </div>

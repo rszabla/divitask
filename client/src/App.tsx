@@ -13,7 +13,7 @@ import { loadAppSettings, saveAppSettings } from './utils/settings.js';
 import { Sidebar } from './components/layout/Sidebar.js';
 import { Header } from './components/layout/Header.js';
 import { OutlinerTree } from './components/outliner/OutlinerTree.js';
-import { GanttChart } from './components/gantt/GanttChart.js';
+import { GanttChart, TimelineViewState } from './components/gantt/GanttChart.js';
 import { SearchModal } from './components/layout/SearchModal.js';
 import { KeyboardShortcutsModal } from './components/layout/KeyboardShortcutsModal.js';
 import { ExportImportModal } from './components/layout/ExportImportModal.js';
@@ -21,6 +21,14 @@ import { SettingsModal } from './components/layout/SettingsModal.js';
 
 export function App() {
   const [documents, setDocuments] = useState<DocumentSummary[]>([]);
+  const [timelineViewState, setTimelineViewState] = useState<TimelineViewState>({
+    zoomLevel: 4,
+    viewDate: new Date(),
+    scrollLeft: 0,
+  });
+  const [isZenMode, setIsZenMode] = useState(false);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
   const [activeDocId, setActiveDocId] = useState<string>(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('doc') || '';
@@ -181,21 +189,33 @@ export function App() {
   // Undo / Redo History Stacks
   const undoStackRef = useRef<TaskDocument[]>([]);
   const redoStackRef = useRef<TaskDocument[]>([]);
+  const lastSnapshotTimeRef = useRef<number>(0);
 
   const pushUndoSnapshot = useCallback((doc: TaskDocument) => {
+    if (!doc || !doc.items || Object.keys(doc.items).length === 0) return;
+    const last = undoStackRef.current[undoStackRef.current.length - 1];
+    if (last && JSON.stringify(last) === JSON.stringify(doc)) {
+      return;
+    }
     undoStackRef.current.push(JSON.parse(JSON.stringify(doc)));
     if (undoStackRef.current.length > 50) {
       undoStackRef.current.shift();
     }
     redoStackRef.current = [];
+    setCanUndo(true);
+    setCanRedo(false);
   }, []);
 
   // Debounced auto-save
   const saveTimeoutRef = useRef<any>(null);
   const handleUpdateDocument = useCallback(
     (updatedDoc: TaskDocument, isStructural: boolean = false) => {
-      if (isStructural && activeDoc) {
-        pushUndoSnapshot(activeDoc);
+      const now = Date.now();
+      if (activeDoc && activeDoc.items && Object.keys(activeDoc.items).length > 0) {
+        if (isStructural || now - lastSnapshotTimeRef.current > 1000) {
+          pushUndoSnapshot(activeDoc);
+          lastSnapshotTimeRef.current = now;
+        }
       }
       setActiveDoc(updatedDoc);
       setIsSaving(true);
@@ -203,14 +223,10 @@ export function App() {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
-
       saveTimeoutRef.current = setTimeout(async () => {
         try {
           await saveDocument(updatedDoc);
           setIsSaving(false);
-          // Refresh summary list item counts
-          const list = await fetchDocuments();
-          setDocuments(list);
         } catch (err) {
           console.error('Auto-save error:', err);
           setIsSaving(false);
@@ -223,16 +239,48 @@ export function App() {
   const handleUndo = useCallback(() => {
     if (undoStackRef.current.length === 0 || !activeDoc) return;
     const previousDoc = undoStackRef.current.pop()!;
+    if (!previousDoc || !previousDoc.items || Object.keys(previousDoc.items).length === 0) {
+      setCanUndo(undoStackRef.current.length > 0);
+      return;
+    }
     redoStackRef.current.push(JSON.parse(JSON.stringify(activeDoc)));
-    handleUpdateDocument(previousDoc, false);
-  }, [activeDoc, handleUpdateDocument]);
+    setActiveDoc(previousDoc);
+    setCanUndo(undoStackRef.current.length > 0);
+    setCanRedo(true);
+    setIsSaving(true);
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(async () => {
+      try {
+        await saveDocument(previousDoc);
+        setIsSaving(false);
+      } catch (err) {
+        setIsSaving(false);
+      }
+    }, 300);
+  }, [activeDoc]);
 
   const handleRedo = useCallback(() => {
     if (redoStackRef.current.length === 0 || !activeDoc) return;
     const nextDoc = redoStackRef.current.pop()!;
+    if (!nextDoc || !nextDoc.items || Object.keys(nextDoc.items).length === 0) {
+      setCanRedo(redoStackRef.current.length > 0);
+      return;
+    }
     undoStackRef.current.push(JSON.parse(JSON.stringify(activeDoc)));
-    handleUpdateDocument(nextDoc, false);
-  }, [activeDoc, handleUpdateDocument]);
+    setActiveDoc(nextDoc);
+    setCanUndo(true);
+    setCanRedo(redoStackRef.current.length > 0);
+    setIsSaving(true);
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(async () => {
+      try {
+        await saveDocument(nextDoc);
+        setIsSaving(false);
+      } catch (err) {
+        setIsSaving(false);
+      }
+    }, 300);
+  }, [activeDoc]);
 
   const handleNavigateTo = (newZoomId: string | null) => {
     setZoomItemId(newZoomId);
@@ -241,6 +289,7 @@ export function App() {
 
   const handleToggleViewMode = (newView: ViewMode) => {
     setViewMode(newView);
+    if (newView === 'outline') setIsZenMode(false);
     updateHistory(activeDocId, zoomItemId, newView);
   };
 
@@ -249,6 +298,9 @@ export function App() {
     setZoomItemId(null);
     undoStackRef.current = [];
     redoStackRef.current = [];
+    setCanUndo(false);
+    setCanRedo(false);
+    lastSnapshotTimeRef.current = 0;
     updateHistory(newDocId, null, viewMode);
   };
 
@@ -484,18 +536,24 @@ export function App() {
 
       {/* Main Workspace Area */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-        {/* Consolidated Top Header */}
-        <Header
-          document={activeDoc}
-          zoomItemId={validZoomItemId}
-          viewMode={viewMode}
-          onNavigateTo={handleNavigateTo}
-          onToggleViewMode={handleToggleViewMode}
-          onOpenSearch={() => setIsSearchOpen(true)}
-          isSaving={isSaving}
-          hideCompleted={hideCompleted}
-          onToggleHideCompleted={handleToggleHideCompleted}
-        />
+        {/* Consolidated Top Header (collapsible in Zen / Fullscreen mode) */}
+        {!isZenMode && (
+          <Header
+            document={activeDoc}
+            zoomItemId={validZoomItemId}
+            viewMode={viewMode}
+            onNavigateTo={handleNavigateTo}
+            onToggleViewMode={handleToggleViewMode}
+            onOpenSearch={() => setIsSearchOpen(true)}
+            isSaving={isSaving}
+            hideCompleted={hideCompleted}
+            onToggleHideCompleted={handleToggleHideCompleted}
+            canUndo={canUndo}
+            canRedo={canRedo}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+          />
+        )}
 
         {/* Tag Filter Banner */}
         {filterTag && (
@@ -535,6 +593,10 @@ export function App() {
               onBackToOutline={() => handleToggleViewMode('outline')}
               onZoomIntoNode={handleZoomIn}
               hideCompleted={hideCompleted}
+              initialViewState={timelineViewState}
+              onSaveViewState={setTimelineViewState}
+              isZenMode={isZenMode}
+              onToggleZenMode={() => setIsZenMode((prev) => !prev)}
             />
           )}
         </main>

@@ -276,6 +276,23 @@ export function createDemoDocument(): TaskDocument {
     },
   };
 
+  // Populate timeBlocks on items with dates
+  Object.values(items).forEach((item) => {
+    if (item.startDate && item.endDate && (!item.timeBlocks || item.timeBlocks.length === 0)) {
+      item.timeBlocks = [
+        {
+          id: `${item.id}-tb1`,
+          startDate: item.startDate,
+          endDate: item.endDate,
+          startTime: item.startTime || '09:00',
+          endTime: item.endTime || '18:00',
+          color: item.color || '#3b82f6',
+          progress: item.progress || 0,
+        },
+      ];
+    }
+  });
+
   return {
     id: 'doc-welcome',
     title: 'Getting Started with DiviTask',

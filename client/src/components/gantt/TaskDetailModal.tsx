@@ -65,6 +65,11 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     );
   };
 
+  const handleColorSelect = (newColor: string) => {
+    setColor(newColor);
+    setTimeBlocks((prev) => prev.map((b) => ({ ...b, color: newColor })));
+  };
+
   const handleApply = () => {
     const sorted = [...timeBlocks].sort((a, b) => {
       const aStart = parseDateTimeSafe(a.startDate, a.startTime)?.getTime() || 0;
@@ -254,7 +259,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 <button
                   key={c}
                   type="button"
-                  onClick={() => setColor(c)}
+                  onClick={() => handleColorSelect(c)}
                   className={`w-6 h-6 rounded-full transition-transform ${
                     color === c ? 'scale-125 ring-2 ring-offset-2 ring-blue-500' : 'hover:scale-110'
                   }`}

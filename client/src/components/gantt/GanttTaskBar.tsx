@@ -18,7 +18,7 @@ interface GanttTaskBarProps {
   onDeleteBlock?: (itemId: string, blockId: string) => void;
   onStartDrag: (
     type: 'move' | 'resize-start' | 'resize-end',
-    e: React.MouseEvent,
+    e: React.MouseEvent | React.TouchEvent,
     node: FlattenedGanttNode,
     blockId: string
   ) => void;
@@ -65,8 +65,21 @@ export const GanttTaskBar: React.FC<GanttTaskBarProps> = ({
   const rawLeft = ((startMs - windowStartMs) / totalWindowMs) * totalTimelineWidth;
   const rawRight = ((endMs - windowStartMs) / totalWindowMs) * totalTimelineWidth;
 
-  const left = Math.max(0, rawLeft);
-  const width = Math.max(Math.min(totalTimelineWidth - left, rawRight - rawLeft), 14);
+  const visibleLeft = Math.max(0, rawLeft);
+  const visibleRight = Math.min(totalTimelineWidth, rawRight);
+  const left = visibleLeft;
+  const width = Math.max(14, visibleRight - visibleLeft);
+
+  const continuesBefore = rawLeft < -1;
+  const continuesAfter = rawRight > totalTimelineWidth + 1;
+  const roundingClass =
+    continuesBefore && continuesAfter
+      ? 'rounded-none'
+      : continuesBefore
+      ? 'rounded-r-md rounded-l-none'
+      : continuesAfter
+      ? 'rounded-l-md rounded-r-none'
+      : 'rounded-md';
 
   const durationStr = formatDuration(startMs, endMs);
   const barColor = block.color || item.color || '#3b82f6';
@@ -105,7 +118,7 @@ Dates: ${formatDisplayDateTime(new Date(startMs), hasTime)} – ${formatDisplayD
           height: '24px',
         }}
         className={`absolute select-none cursor-pointer group z-10 ${
-          isSelected ? 'ring-2 ring-blue-500 ring-offset-1 dark:ring-offset-zinc-900 rounded-sm' : ''
+          isSelected ? 'ring-2 ring-blue-500 ring-offset-1 dark:ring-offset-zinc-900 rounded-sm touch-none' : ''
         }`}
         onClick={(e) => onSelect(e, node, block.id)}
         onMouseDown={(e) => {
@@ -113,6 +126,12 @@ Dates: ${formatDisplayDateTime(new Date(startMs), hasTime)} – ${formatDisplayD
             onStartDrag('move', e, node, block.id);
           } else {
             onSelect(e, node, block.id);
+          }
+        }}
+        onTouchStart={(e) => {
+          if (isSelected) {
+            e.stopPropagation();
+            onStartDrag('move', e, node, block.id);
           }
         }}
         onDoubleClick={(e) => {
@@ -123,19 +142,23 @@ Dates: ${formatDisplayDateTime(new Date(startMs), hasTime)} – ${formatDisplayD
       >
         {/* Parent Summary Bar (Bracket Shape) */}
         <div
-          className="relative h-2 rounded-sm shadow-xs transition-transform group-hover:scale-y-110"
+          className={`relative h-2 ${roundingClass} shadow-xs transition-transform group-hover:scale-y-110`}
           style={{ backgroundColor: item.completed ? '#9ca3af' : barColor }}
         >
           {/* Left bracket down-arrow */}
-          <div
-            className="absolute left-0 -bottom-1 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px]"
-            style={{ borderTopColor: item.completed ? '#9ca3af' : barColor }}
-          />
+          {!continuesBefore && (
+            <div
+              className="absolute left-0 -bottom-1 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px]"
+              style={{ borderTopColor: item.completed ? '#9ca3af' : barColor }}
+            />
+          )}
           {/* Right bracket down-arrow */}
-          <div
-            className="absolute right-0 -bottom-1 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px]"
-            style={{ borderTopColor: item.completed ? '#9ca3af' : barColor }}
-          />
+          {!continuesAfter && (
+            <div
+              className="absolute right-0 -bottom-1 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px]"
+              style={{ borderTopColor: item.completed ? '#9ca3af' : barColor }}
+            />
+          )}
         </div>
 
         {/* Task Label beside bar */}
@@ -160,7 +183,7 @@ Dates: ${formatDisplayDateTime(new Date(startMs), hasTime)} – ${formatDisplayD
       }}
       className={`absolute select-none group/bar transition-all ${
         isSelected
-          ? 'ring-2 ring-blue-500 ring-offset-1 dark:ring-offset-zinc-900 shadow-md z-20 brightness-105'
+          ? 'ring-2 ring-blue-500 ring-offset-1 dark:ring-offset-zinc-900 shadow-md z-20 brightness-105 touch-none'
           : 'hover:brightness-95 hover:shadow-xs z-10'
       } ${isDragging ? 'opacity-85 shadow-lg' : ''} ${item.completed ? 'opacity-70' : 'opacity-90'}`}
       onClick={(e) => onSelect(e, node, block.id)}
@@ -170,13 +193,12 @@ Dates: ${formatDisplayDateTime(new Date(startMs), hasTime)} – ${formatDisplayD
       }}
       title={tooltipText}
     >
-      {/* Main Bar body */}
       <div
-        className={`relative w-full h-full rounded-md overflow-hidden flex items-center justify-between px-2 text-xs transition-colors ${
+        className={`relative w-full h-full ${roundingClass} overflow-hidden flex items-center justify-between px-2 text-xs transition-colors ${
           item.completed
             ? 'bg-slate-400 dark:bg-zinc-600 text-slate-100 dark:text-zinc-200 border border-dashed border-slate-500 dark:border-zinc-500 shadow-2xs'
             : `${textColorClass}`
-        } ${isSelected ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}`}
+        } ${isSelected ? 'cursor-grab active:cursor-grabbing touch-none' : 'cursor-pointer'}`}
         style={{ backgroundColor: item.completed ? undefined : barColor }}
         onMouseDown={(e) => {
           if (isSelected) {
@@ -185,6 +207,12 @@ Dates: ${formatDisplayDateTime(new Date(startMs), hasTime)} – ${formatDisplayD
           } else {
             // First click selects
             onSelect(e, node, block.id);
+          }
+        }}
+        onTouchStart={(e) => {
+          if (isSelected) {
+            e.stopPropagation();
+            onStartDrag('move', e, node, block.id);
           }
         }}
       >
@@ -230,8 +258,12 @@ Dates: ${formatDisplayDateTime(new Date(startMs), hasTime)} – ${formatDisplayD
         <>
           {/* Left resize handle (Adjust Start Time) */}
           <div
-            className="absolute left-0 top-0 bottom-0 w-2.5 cursor-ew-resize hover:bg-white/50 active:bg-white/70 rounded-l-md transition-colors z-20 flex items-center justify-center bg-white/20"
+            className="absolute left-0 top-0 bottom-0 w-3.5 sm:w-2.5 cursor-ew-resize hover:bg-white/50 active:bg-white/70 rounded-l-md transition-colors z-20 flex items-center justify-center bg-white/20 touch-none"
             onMouseDown={(e) => {
+              e.stopPropagation();
+              onStartDrag('resize-start', e, node, block.id);
+            }}
+            onTouchStart={(e) => {
               e.stopPropagation();
               onStartDrag('resize-start', e, node, block.id);
             }}
@@ -242,8 +274,12 @@ Dates: ${formatDisplayDateTime(new Date(startMs), hasTime)} – ${formatDisplayD
 
           {/* Right resize handle (Adjust End Time) */}
           <div
-            className="absolute right-0 top-0 bottom-0 w-2.5 cursor-ew-resize hover:bg-white/50 active:bg-white/70 rounded-r-md transition-colors z-20 flex items-center justify-center bg-white/20"
+            className="absolute right-0 top-0 bottom-0 w-3.5 sm:w-2.5 cursor-ew-resize hover:bg-white/50 active:bg-white/70 rounded-r-md transition-colors z-20 flex items-center justify-center bg-white/20 touch-none"
             onMouseDown={(e) => {
+              e.stopPropagation();
+              onStartDrag('resize-end', e, node, block.id);
+            }}
+            onTouchStart={(e) => {
               e.stopPropagation();
               onStartDrag('resize-end', e, node, block.id);
             }}

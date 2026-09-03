@@ -4,13 +4,12 @@ import {
   ChevronDown,
   ZoomIn,
   Check,
-  Menu,
+  MoreVertical,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { TaskItem, TaskDocument } from '../../types.js';
 import { MarkdownText } from '../common/MarkdownText.js';
 import { ItemMenu } from './ItemMenu.js';
-import { DatePickerPopover } from './DatePickerPopover.js';
 
 interface OutlinerItemProps {
   itemId: string;
@@ -28,6 +27,7 @@ interface OutlinerItemProps {
   onUnindentItem: (id: string, cursor?: number | 'start' | 'end') => void;
   onDuplicateItem: (id: string) => void;
   onZoomIn: (id: string) => void;
+  onOpenDetailsModal?: (itemId: string) => void;
   onNavigateUp: (currentId: string, cursor?: number | 'start' | 'end') => void;
   onNavigateDown: (currentId: string, cursor?: number | 'start' | 'end') => void;
   onFilterTag?: (tag: string) => void;
@@ -97,11 +97,11 @@ export const OutlinerItem: React.FC<OutlinerItemProps> = ({
   onBulkUnindent,
   onPasteHierarchy,
   hideCompleted,
+  onOpenDetailsModal,
 }) => {
   const item = document.items[itemId];
   const [isEditingNote, setIsEditingNote] = useState(false);
   const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const noteRef = useRef<HTMLTextAreaElement>(null);
@@ -328,6 +328,7 @@ export const OutlinerItem: React.FC<OutlinerItemProps> = ({
 
       {/* Node content row */}
       <div
+        data-item-id={itemId}
         onMouseDown={(e) => {
           onRowMouseDown?.(itemId, e);
         }}
@@ -378,6 +379,29 @@ export const OutlinerItem: React.FC<OutlinerItemProps> = ({
             : 'hover:bg-gray-100/60 dark:hover:bg-zinc-800/40'
         }`}
       >
+        {/* Left-Hand Hover Icons: Focus on task and Task Menu to the left of the collapse icon */}
+        <div className="w-8 flex items-center justify-end gap-0.5 opacity-60 sm:opacity-0 sm:group-hover/row:opacity-100 transition-opacity flex-shrink-0 mr-0.5">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onZoomIn(itemId);
+            }}
+            className="p-0.5 text-gray-400 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 rounded"
+            title="Focus on task (Ctrl+])"
+          >
+            <ZoomIn className="w-3 h-3 text-blue-500" />
+          </button>
+          <button
+            type="button"
+            onClick={openMenu}
+            className="p-0.5 text-gray-400 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100 rounded"
+            title="Task menu"
+          >
+            <MoreVertical className="w-3 h-3" />
+          </button>
+        </div>
+
         {/* Expand / Collapse toggle */}
         <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">
           {hasChildren ? (
@@ -411,7 +435,43 @@ export const OutlinerItem: React.FC<OutlinerItemProps> = ({
             onDragEnd={() => {
               onDragEndItem?.();
             }}
-            className={`w-2.5 h-2.5 rounded-full transition-all cursor-grab active:cursor-grabbing ${
+            onTouchStart={(e) => {
+              e.stopPropagation();
+              onDragStartItem?.(itemId);
+            }}
+            onTouchMove={(e) => {
+              e.stopPropagation();
+              if (e.touches && e.touches[0]) {
+                const touch = e.touches[0];
+                const targetEl = window.document.elementFromPoint(touch.clientX, touch.clientY);
+                const targetRow = targetEl?.closest('[data-item-id]');
+                if (targetRow) {
+                  const targetId = targetRow.getAttribute('data-item-id');
+                  if (targetId && targetId !== itemId) {
+                    const rect = targetRow.getBoundingClientRect();
+                    const relY = touch.clientY - rect.top;
+                    const height = rect.height;
+                    let pos: 'before' | 'after' | 'inside';
+                    if (relY < height * 0.28) {
+                      pos = 'before';
+                    } else if (relY > height * 0.72) {
+                      pos = 'after';
+                    } else {
+                      pos = 'inside';
+                    }
+                    onDragOverItem?.(targetId, pos);
+                  }
+                }
+              }
+            }}
+            onTouchEnd={(e) => {
+              e.stopPropagation();
+              if (dragInfo && dragInfo.draggedId && dragInfo.targetId && dragInfo.position) {
+                onDropItem?.(dragInfo.draggedId, dragInfo.targetId, dragInfo.position);
+              }
+              onDragEndItem?.();
+            }}
+            className={`w-2.5 h-2.5 rounded-full transition-all cursor-grab active:cursor-grabbing touch-none ${
               item.completed
                 ? 'bg-gray-400 dark:bg-zinc-600 scale-90'
                 : hasChildren && isCollapsed
@@ -522,29 +582,6 @@ export const OutlinerItem: React.FC<OutlinerItemProps> = ({
           </button>
         )}
 
-        {/* Hover Quick Action Buttons - Focus and Hamburger Menu */}
-        <div className="opacity-0 group-hover/row:opacity-100 flex items-center gap-0.5 transition-opacity flex-shrink-0 mt-0.5 bg-white/90 dark:bg-zinc-900/90 rounded-md shadow-xs border border-gray-100 dark:border-zinc-800 p-0.5">
-          {/* Focus button */}
-          <button
-            type="button"
-            onClick={() => onZoomIn(itemId)}
-            className="flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/60 rounded transition-colors"
-            title="Focus on task (Ctrl+])"
-          >
-            <ZoomIn className="w-3.5 h-3.5 text-blue-500" />
-            <span className="text-[11px]">Focus</span>
-          </button>
-
-          {/* Task Menu (Hamburger) button */}
-          <button
-            type="button"
-            onClick={openMenu}
-            className="flex items-center p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded transition-colors"
-            title="Task menu"
-          >
-            <Menu className="w-3.5 h-3.5" />
-          </button>
-        </div>
       </div>
 
       {/* Drop indicator line: AFTER */}
@@ -599,6 +636,7 @@ export const OutlinerItem: React.FC<OutlinerItemProps> = ({
               onBulkUnindent={onBulkUnindent}
               onPasteHierarchy={onPasteHierarchy}
               hideCompleted={hideCompleted}
+              onOpenDetailsModal={onOpenDetailsModal}
             />
           ))}
         </div>
@@ -616,7 +654,7 @@ export const OutlinerItem: React.FC<OutlinerItemProps> = ({
             setIsEditingNote(true);
             onFocusItem(itemId);
           }}
-          onOpenDatePicker={() => setShowDatePicker(true)}
+          onOpenDatePicker={() => onOpenDetailsModal?.(itemId)}
           onToggleComplete={handleToggleComplete}
           onIndent={() => onIndentItem(itemId)}
           onUnindent={() => onUnindentItem(itemId)}
@@ -624,15 +662,6 @@ export const OutlinerItem: React.FC<OutlinerItemProps> = ({
           onDelete={() => onDeleteItem(itemId)}
           canIndent={canIndent}
           canUnindent={canUnindent}
-        />
-      )}
-
-      {/* Date Picker Modal */}
-      {showDatePicker && (
-        <DatePickerPopover
-          item={item}
-          onSave={(updates) => onUpdateItem(itemId, updates)}
-          onClose={() => setShowDatePicker(false)}
         />
       )}
     </div>

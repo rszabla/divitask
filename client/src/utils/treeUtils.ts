@@ -143,7 +143,7 @@ export function flattenSubtreeForGantt(
     if (!item) return;
 
     const hasChildren = Boolean(item.childIds && item.childIds.length > 0);
-    const isExpanded = !collapsedSet.has(itemId);
+    const isExpanded = !item.collapsed && (!collapsedSet || !collapsedSet.has(itemId));
     const visible = parentVisible;
 
     const { startDate, endDate, hasDates, timeBlocks } = calculateSummaryDates(items, itemId);

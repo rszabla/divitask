@@ -13,6 +13,7 @@ import confetti from 'canvas-confetti';
 import { TaskDocument, TaskItem } from '../../types.js';
 import { OutlinerItem } from './OutlinerItem.js';
 import { getAllDescendantIds } from '../../utils/treeUtils.js';
+import { TaskDetailModal } from '../gantt/TaskDetailModal.js';
 
 interface OutlinerTreeProps {
   document: TaskDocument;
@@ -58,6 +59,7 @@ export const OutlinerTree: React.FC<OutlinerTreeProps> = ({
     position: 'before' | 'after' | 'inside' | null;
   } | null>(null);
   const zoomHeaderRef = useRef<HTMLInputElement>(null);
+  const [editingModalItemId, setEditingModalItemId] = useState<string | null>(null);
 
   const generateId = () => 'item-' + Math.random().toString(36).substring(2, 9);
 
@@ -856,10 +858,10 @@ export const OutlinerTree: React.FC<OutlinerTreeProps> = ({
 
   // Window keydown listener when multiple tasks are selected
   useEffect(() => {
-    if (selectedItemIds.length <= 1) return;
-
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Backspace' || e.key === 'Delete') {
+      if (selectedItemIds.length <= 1) return;
+
+      if (e.key === 'Delete') {
         e.preventDefault();
         handleBulkDelete(selectedItemIds);
       } else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
@@ -1207,7 +1209,8 @@ export const OutlinerTree: React.FC<OutlinerTreeProps> = ({
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="w-full overflow-x-auto">
+      <div className="max-w-4xl min-w-[500px] mx-auto px-4 py-8">
       {/* Focused Item Banner Header (focus header) */}
       {zoomedItem && (
         <div className="mb-6 pb-4 border-b border-gray-200 dark:border-zinc-800">
@@ -1305,6 +1308,7 @@ export const OutlinerTree: React.FC<OutlinerTreeProps> = ({
             onBulkUnindent={() => handleBulkUnindent(selectedItemIds)}
             onPasteHierarchy={handlePasteHierarchy}
             hideCompleted={hideCompleted}
+            onOpenDetailsModal={(id) => setEditingModalItemId(id)}
           />
         ))}
       </div>
@@ -1351,7 +1355,7 @@ export const OutlinerTree: React.FC<OutlinerTreeProps> = ({
           <button
             onClick={() => handleBulkDelete(selectedItemIds)}
             className="flex items-center gap-1 px-2.5 py-1 hover:bg-red-500/20 text-red-300 rounded-md transition-colors"
-            title="Delete tasks (Backspace / Delete)"
+            title="Delete tasks (Delete)"
           >
             <Trash2 className="w-3.5 h-3.5 text-red-400" />
             <span>Delete</span>
@@ -1394,6 +1398,23 @@ export const OutlinerTree: React.FC<OutlinerTreeProps> = ({
           </button>
         </div>
       )}
+
+      {/* Unified Task & Timeline Details Modal */}
+      {editingModalItemId && document.items[editingModalItemId] && (
+        <TaskDetailModal
+          item={document.items[editingModalItemId]}
+          onSave={(updates) => {
+            handleUpdateItem(editingModalItemId, updates);
+            setEditingModalItemId(null);
+          }}
+          onDelete={(id) => {
+            handleDeleteItem(id);
+            setEditingModalItemId(null);
+          }}
+          onClose={() => setEditingModalItemId(null)}
+        />
+      )}
+      </div>
     </div>
   );
 };

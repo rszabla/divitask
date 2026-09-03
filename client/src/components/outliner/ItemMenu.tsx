@@ -27,6 +27,7 @@ interface ItemMenuProps {
   onDelete: () => void;
   canIndent: boolean;
   canUnindent: boolean;
+  hideAddNote?: boolean;
 }
 
 export const ItemMenu: React.FC<ItemMenuProps> = ({
@@ -44,6 +45,7 @@ export const ItemMenu: React.FC<ItemMenuProps> = ({
   onDelete,
   canIndent,
   canUnindent,
+  hideAddNote = false,
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -101,18 +103,20 @@ export const ItemMenu: React.FC<ItemMenuProps> = ({
       </button>
 
       {/* Add Note */}
-      <button
-        onClick={() => {
-          onAddNote();
-          onClose();
-        }}
-        className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
-      >
-        <FileText className="w-3.5 h-3.5 text-gray-400" />
-        {item.note ? 'Edit Note' : 'Add Note'}
-      </button>
+      {!hideAddNote && (
+        <button
+          onClick={() => {
+            onAddNote();
+            onClose();
+          }}
+          className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+        >
+          <FileText className="w-3.5 h-3.5 text-gray-400" />
+          {item.note ? 'Edit Note' : 'Add Note'}
+        </button>
+      )}
 
-      {/* Schedule / Date Picker */}
+      {/* Schedule / Task & Timeline Details */}
       <button
         onClick={() => {
           onOpenDatePicker();
@@ -121,7 +125,7 @@ export const ItemMenu: React.FC<ItemMenuProps> = ({
         className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
       >
         <Calendar className="w-3.5 h-3.5 text-gray-400" />
-        Set Dates / Schedule
+        Task & Timeline Details
       </button>
 
       {/* Toggle Complete */}

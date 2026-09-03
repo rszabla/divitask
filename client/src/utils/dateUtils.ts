@@ -309,13 +309,19 @@ export function getGanttSubdivisions(
   windowStart: Date,
   windowEnd: Date,
   containerWidth: number = 800,
-  settings?: AppSettings
+  settings?: AppSettings,
+  isCompact: boolean = false
 ): GanttSubdivisionResult {
   const windowStartMs = windowStart.getTime();
   const windowEndMs = windowEnd.getTime();
   const totalWindowMs = Math.max(windowEndMs - windowStartMs, 1000);
 
   const yearMode = settings?.yearMode || 'quarter';
+
+  // Responsive tier heights (compact for short landscape screens)
+  const t1Height = isCompact ? 18 : 24;
+  const t2Height = isCompact ? 16 : 22;
+  const t3Height = isCompact ? 15 : 20;
 
   // Parse working hours (default 9am - 5pm)
   let workStartHour = 9;
@@ -480,7 +486,7 @@ export function getGanttSubdivisions(
       }
       tier1 = {
         id: 'l1-terms',
-        heightPx: 24,
+        heightPx: t1Height,
         className: 'bg-gray-100 dark:bg-zinc-900 text-gray-900 dark:text-gray-100 font-bold text-[11px]',
         units,
       };
@@ -501,7 +507,7 @@ export function getGanttSubdivisions(
       }
       tier1 = {
         id: 'l1-quarters',
-        heightPx: 24,
+        heightPx: t1Height,
         className: 'bg-gray-100 dark:bg-zinc-900 text-gray-900 dark:text-gray-100 font-bold text-[11px]',
         units,
       };
@@ -510,7 +516,7 @@ export function getGanttSubdivisions(
     // Tier 2: Months (HIGH CONTRAST: dark:bg-zinc-800 dark:text-gray-100)
     const tier2 = makeMonthTier(
       'l1-months',
-      22,
+      t2Height,
       'bg-gray-200 text-gray-900 dark:bg-zinc-800 dark:text-gray-100 font-bold text-[10px]',
       (d) => format(d, 'MMMM'),
       windowStart,
@@ -577,7 +583,7 @@ export function getGanttSubdivisions(
 
     const tier1: HeaderTier = {
       id: 'l2-title',
-      heightPx: 24,
+      heightPx: t1Height,
       className: 'bg-gray-100 dark:bg-zinc-900 text-gray-900 dark:text-gray-100 font-bold text-[11px]',
       units: [
         {
@@ -593,7 +599,7 @@ export function getGanttSubdivisions(
     // Tier 2: True Calendar Months (aligned to 1st of each month, with dark background in dark mode!)
     const tier2 = makeMonthTier(
       'l2-months',
-      22,
+      t2Height,
       'bg-gray-200 text-gray-900 dark:bg-zinc-800 dark:text-gray-100 font-bold text-[10px]',
       (d) => format(d, 'MMMM yyyy'),
       windowStart,
@@ -647,7 +653,7 @@ export function getGanttSubdivisions(
     // Tier 1: Weeks (Full 7-day calendar weeks: Sunday to Saturday)
     const tier1 = makeCalendarWeekTier(
       'l3-weeks',
-      24,
+      t1Height,
       'bg-gray-100 dark:bg-zinc-900 text-gray-900 dark:text-gray-100 font-bold text-[11px]',
       (_segStart, _segEnd, weekStart, weekEnd) => {
         const wNum = getWeek(weekStart);
@@ -661,7 +667,7 @@ export function getGanttSubdivisions(
     // Tier 2: Days (HIGH CONTRAST: dark:bg-zinc-800 dark:text-gray-100)
     const tier2 = makeStepTier(
       'l3-days',
-      22,
+      t2Height,
       'bg-gray-200 text-gray-900 dark:bg-zinc-800 dark:text-gray-100 font-bold text-[10px]',
       24 * 3600 * 1000,
       (d) => format(d, 'EEE d'),
@@ -717,7 +723,7 @@ export function getGanttSubdivisions(
     // Tier 1: Days
     const tier1 = makeStepTier(
       'l4-days',
-      24,
+      t1Height,
       'bg-gray-100 dark:bg-zinc-900 text-gray-900 dark:text-gray-100 font-bold text-[11px]',
       24 * 3600 * 1000,
       (d) => format(d, 'EEEE, MMMM d'),
@@ -727,7 +733,7 @@ export function getGanttSubdivisions(
     // Tier 2: 6hr chunks (HIGH CONTRAST: dark:bg-zinc-800 dark:text-gray-100)
     const tier2 = makeStepTier(
       'l4-6hr-chunks',
-      22,
+      t2Height,
       'bg-gray-200 text-gray-900 dark:bg-zinc-800 dark:text-gray-100 font-bold text-[10px]',
       6 * 3600 * 1000,
       (d) => {
@@ -789,7 +795,7 @@ export function getGanttSubdivisions(
     // Tier 1: Day Header
     const tier1 = makeStepTier(
       'l5-day-title',
-      24,
+      t1Height,
       'bg-gray-100 dark:bg-zinc-900 text-gray-900 dark:text-gray-100 font-bold text-[11px]',
       totalWindowMs,
       () => format(windowStart, 'EEEE, MMMM d, yyyy'),
@@ -799,7 +805,7 @@ export function getGanttSubdivisions(
     // Tier 2: 6hr chunks (HIGH CONTRAST: dark:bg-zinc-800 dark:text-gray-100)
     const tier2 = makeStepTier(
       'l5-6hr-chunks',
-      22,
+      t2Height,
       'bg-gray-200 text-gray-900 dark:bg-zinc-800 dark:text-gray-100 font-bold text-[10px]',
       6 * 3600 * 1000,
       (d) => {
@@ -815,7 +821,7 @@ export function getGanttSubdivisions(
     // Tier 3: Every hour
     const tier3 = makeStepTier(
       'l5-hours',
-      20,
+      t3Height,
       'bg-white dark:bg-zinc-900 text-gray-800 dark:text-gray-200 font-semibold text-[9px]',
       3600 * 1000,
       (d) => format(d, 'h a'),
